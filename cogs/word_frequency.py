@@ -1,8 +1,9 @@
 import discord
-import asyncio # USED TO CATCH TIMEOUT ERRROR RAISED BY discord.Client.wait_for()
+import asyncio  # USED TO CATCH TIMEOUT ERRROR RAISED BY discord.Client.wait_for()
 import requests
 from discord.ext import commands
 from collections import defaultdict
+
 
 # Setup Function
 async def setup(bot):
@@ -14,17 +15,19 @@ class WordFrequency(commands.Cog):
     # Initalizer
     def __init__(self, bot):
         self.bot = bot
-        self.frequencyMaps = {}  # Use database eventually, username -> FrequencyMap
-    
+        self.frequencyMaps = {
+        }  # Use database eventually, username -> FrequencyMap
+
     # Class Definitions
     class FrequencyMap:
+
         def __init__(self, username):
             self.username = username
-            self.sfw = False # Default: True
-            self.wordFreq = defaultdict(int) # defaultdict(int): Nonexistant keys assigned 0
+            self.sfw = False  # Default: True
+            self.wordFreq = defaultdict(
+                int)  # defaultdict(int): Nonexistant keys assigned 0
             self.sortedKeys = None
             self.pages = []
-
 
     """
     
@@ -50,7 +53,6 @@ class WordFrequency(commands.Cog):
 
         return data['result']
 
-
     def generateWordFrequency(self, author, userInput):
         """
 
@@ -60,7 +62,7 @@ class WordFrequency(commands.Cog):
         """
 
         author_wordFreq = author.wordFreq
-        
+
         if author.sfw:
             message = self.filterMessage(userInput.casefold())
         else:
@@ -73,11 +75,11 @@ class WordFrequency(commands.Cog):
                 author_wordFreq[word] += 1
 
         # sorted() returns a *list* of key from most freq keys to least freq keys
-        sorted_wordFreqKeys = sorted(
-            author_wordFreq, key=author_wordFreq.get, reverse=True)
+        sorted_wordFreqKeys = sorted(author_wordFreq,
+                                     key=author_wordFreq.get,
+                                     reverse=True)
 
         return author, author_wordFreq, sorted_wordFreqKeys
-
 
     def printWordFreq(self, user):
         """
@@ -94,7 +96,6 @@ class WordFrequency(commands.Cog):
 
         return
 
-
     def createWordFreqString(self, user):
         """
 
@@ -104,10 +105,10 @@ class WordFrequency(commands.Cog):
 
         word_frequency = ''
         for rank, key in enumerate(user.sortedKeys):
-            word_frequency += (f"     #{rank + 1} - {key}: {user.wordFreq[key]}\n")
+            word_frequency += (
+                f"     #{rank + 1} - {key}: {user.wordFreq[key]}\n")
 
         return word_frequency
-
 
     def createPages(self, message, nWords=10):
         """
@@ -133,23 +134,18 @@ class WordFrequency(commands.Cog):
             pages.append(page)
 
         return pages
-    
+
     def createEmbedMessage(self, user, userFreq, message):
         # Body of Message
-        embed_message = discord.Embed(
-            title='Word Count',
-            color=discord.Color.blue(),
-            description=message
-        )
+        embed_message = discord.Embed(title='Word Count',
+                                      color=discord.Color.blue(),
+                                      description=message)
 
         # Appears at the top of the message
-        embed_message.set_author(
-            name=user.display_name,
-            icon_url=user.avatar_url
-        )
+        embed_message.set_author(name=user.display_name,
+                                 icon_url=user.avatar_url)
 
         return embed_message
-
 
     """
 
@@ -176,7 +172,8 @@ class WordFrequency(commands.Cog):
             self.frequencyMaps.update({message.author: mentioned_word_freq})
 
         # Create a word frequency map based on the recieved message
-        word_frequency = self.generateWordFrequency(mentioned_word_freq, message.content)
+        word_frequency = self.generateWordFrequency(mentioned_word_freq,
+                                                    message.content)
 
         # Update the mentioned_word_freq's word frequency table
         mentioned_word_freq = word_frequency[0]
@@ -184,9 +181,8 @@ class WordFrequency(commands.Cog):
         mentioned_word_freq.sortedKeys = word_frequency[2]
 
         # DEBUG: Prints frequency map to CONSOLE
-        # printWordFreq(author_freq_map)
+        # self.printWordFreq(author_freq_map)
         # print()
-
 
     # NOTE: name_of_variable : type_of_instance is a discord.py conversion feature
     # TODO: Add ability to look up nth most used word
@@ -211,12 +207,12 @@ class WordFrequency(commands.Cog):
             # Convert pages from string format into embed
             page = mentioned_freq.pages[0]
 
-            embed_message = self.createEmbedMessage(mentioned_user, mentioned_freq, page)
+            embed_message = self.createEmbedMessage(mentioned_user,
+                                                    mentioned_freq, page)
 
             # Appears at the bottom of the message
             embed_message.set_footer(
-                text=f'page 1/{len(mentioned_freq.pages)}'
-            )
+                text=f'page 1/{len(mentioned_freq.pages)}')
 
             # Send and store sent message as a 'message' instance
             bot_message = await ctx.send(embed=embed_message)
@@ -233,31 +229,39 @@ class WordFrequency(commands.Cog):
             def check(reaction, user):
                 # print('Checking Reaction')
                 if reaction.message != bot_message:
-                        return False
+                    return False
 
-                return user != self.bot.user and str(reaction.emoji) in [arrow_left, arrow_right]
+                return user != self.bot.user and str(
+                    reaction.emoji) in [arrow_left, arrow_right]
 
             current_page_index = 0
 
             # Change pages with arrow react
-            # TODO: For every active message, any reactions to any messages will 
+            # TODO: For every active message, any reactions to any messages will
             #       run check() that many times causing performance issues.
             while True:
                 try:
                     # Raises asyncio.TimeoutError to break out of the loop
                     # Flow of statements continue if check() returns true or if wait_for times out
-                    reaction, user = await self.bot.wait_for("reaction_add", timeout=120, check=check)
+                    reaction, user = await self.bot.wait_for("reaction_add",
+                                                             timeout=120,
+                                                             check=check)
 
                     if str(reaction.emoji) == '➡️':
-                        current_page_index = (current_page_index + 1) % len(mentioned_freq.pages)
+                        current_page_index = (current_page_index + 1) % len(
+                            mentioned_freq.pages)
 
                     elif str(reaction.emoji) == '⬅️':
-                        current_page_index = (current_page_index - 1) % len(mentioned_freq.pages)
+                        current_page_index = (current_page_index - 1) % len(
+                            mentioned_freq.pages)
 
                     # Create the new message to display
-                    embed_message = self.createEmbedMessage(mentioned_user, mentioned_freq, mentioned_freq.pages[current_page_index])
+                    embed_message = self.createEmbedMessage(
+                        mentioned_user, mentioned_freq,
+                        mentioned_freq.pages[current_page_index])
                     embed_message.set_footer(
-                        text=f'page {current_page_index + 1}/{len(mentioned_freq.pages)}'
+                        text=
+                        f'page {current_page_index + 1}/{len(mentioned_freq.pages)}'
                     )
 
                     # Edit bot's discord message
@@ -267,7 +271,6 @@ class WordFrequency(commands.Cog):
                     # print('Time Out')
                     break
                     # ending the loop if user doesn't react after x seconds
-
 
     # TODO: Look up type() vs isinstance()
     @freq.error
@@ -282,4 +285,4 @@ class WordFrequency(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             print(
                 f'freq ERROR: {ctx.author} did not specify which member to look up.'
-                )
+            )
