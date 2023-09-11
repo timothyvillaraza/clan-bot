@@ -15,6 +15,17 @@ bot = commands.Bot(command_prefix='.', case_insensitive=True, intents=intents)
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
+    cogListString = ''
+
+    print('Loading cogs...')
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            cog_name = filename[:-3]  # File by name without .py extension
+            await bot.load_extension(f'cogs.{cog_name}')
+            cogListString += f'cogs.{cog_name}\n'
+            print(f'    {cog_name} loaded')
+    print()  # newline
+
 
 @bot.command()
 async def load(ctx, extension):
