@@ -1,9 +1,6 @@
 import os
-import discord
-import asyncio
-import requests
+from services.brawlstars.services.club_service import ClubService
 from discord.ext import commands
-
 
 # Setup
 async def setup(client):
@@ -18,19 +15,8 @@ class ApiTestCommands(commands.Cog):
 
     @commands.command()
     async def ApiTest(self, ctx):
-        # Assemble URL
-        requestUrl = f"https://api.brawlstars.com/v1/clubs/{os.environ['CLUB_TAG']}"
+        _club_service = ClubService()
 
-        response = requests.get(
-            requestUrl,
-            headers={'Authorization': "Bearer " + os.environ['JWT_TOKEN']})
-
-        if response.status_code == 200:
-            json_response = response.json()
-
-            members_dict = {}
-            for member in json_response["members"]:
-                member_tag = member["tag"]
-                members_dict[member_tag] = member
-        
-        print(members_dict)
+        print('test')
+        members = _club_service.get_all_members_dict_by_id(os.environ['CLUB_TAG'])
+        print(members)

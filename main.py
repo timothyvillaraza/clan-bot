@@ -15,6 +15,7 @@ bot = commands.Bot(command_prefix='.', case_insensitive=True, intents=intents)
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
+    # TODO: Remove Later, added as to not need to manually run .loadallcogs discord command
     cogListString = ''
 
     print('Loading cogs...')
@@ -25,6 +26,7 @@ async def on_ready():
             cogListString += f'cogs.{cog_name}\n'
             print(f'    {cog_name} loaded')
     print()  # newline
+    # END TODO
 
 
 @bot.command()
